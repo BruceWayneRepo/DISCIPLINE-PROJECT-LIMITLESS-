@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Discipline — Habit Wheel</title>
+<meta name="theme-color" content="#08080B" />
+<meta name="color-scheme" content="dark light" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Discipline" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-192.png" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+*{box-sizing:border-box;}
+html,body{margin:0;background:#08080B;}
+@media (prefers-color-scheme: light){ html,body{background:#EDEBE4;} }
+@keyframes drift{0%{transform:translate(0,0) scale(1);}50%{transform:translate(-4%,3%) scale(1.08);}100%{transform:translate(0,0) scale(1);}}
+@keyframes riseIn{from{opacity:0;transform:translateY(16px) scale(.985);filter:blur(7px);}to{opacity:1;transform:none;filter:none;}}
+@keyframes boardIn{from{opacity:.4;}to{opacity:1;}}
+@keyframes breathe{0%,100%{opacity:.45;transform:scale(1);}50%{opacity:.85;transform:scale(1.06);}}
+@keyframes pop{0%{transform:scale(.84);}55%{transform:scale(1.09);}100%{transform:scale(1);}}
+@keyframes burst{from{transform:scale(.4);opacity:.85;}to{transform:scale(3.4);opacity:0;}}
+@keyframes fly{from{transform:translate(0,0) scale(1);opacity:1;}to{transform:translate(var(--tx),var(--ty)) scale(.2);opacity:0;}}
+@keyframes bloom{0%{opacity:0;}28%{opacity:.85;}100%{opacity:0;}}
+.wrap{
+  /* DARK defaults (high contrast) */
+  --bg:#08080B; --ink:#FFFFFF; --soft:rgba(255,255,255,.76); --faint:rgba(255,255,255,.6);
+  --line:rgba(255,255,255,.14); --glass:rgba(255,255,255,.06); --glassb:rgba(255,255,255,.15);
+  --sticky:#0e0e13; --placeholder:rgba(255,255,255,.5); --segbg:#ffffff; --segfg:#0A0A0C;
+  --shadow:0 12px 40px rgba(0,0,0,.4); --wheelshadow:0 24px 70px rgba(0,0,0,.55);
+  --modalbg:rgba(22,22,28,.92); --wedge:rgba(255,255,255,.72); --dash:rgba(255,255,255,.64);
+  --emptycell:rgba(255,255,255,.09); --gwend:#F0996F; --err:#FF8A7A; --hi:rgba(255,255,255,.06);
+  --glow1:rgba(90,97,160,.22); --glow2:rgba(47,138,114,.16); --glow3:rgba(138,82,150,.15);
+  position:relative; min-height:100vh; min-height:100dvh; color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif; background:var(--bg);
+  padding:calc(24px + env(safe-area-inset-top)) 18px calc(46px + env(safe-area-inset-bottom));
+  overflow-x:hidden; transition:background .3s, color .3s;
+}
+@media (prefers-color-scheme: light){ .wrap:not([data-theme]){
+  --bg:#EDEBE4; --ink:#201D19; --soft:#524D46; --faint:#7d766b;
+  --line:rgba(34,31,27,.15); --glass:rgba(255,255,255,.62); --glassb:rgba(34,31,27,.13);
+  --sticky:#F1EFE9; --placeholder:rgba(34,31,27,.42); --segbg:#201D19; --segfg:#EDEBE4;
+  --shadow:0 12px 30px rgba(34,31,27,.10); --wheelshadow:0 20px 50px rgba(34,31,27,.13);
+  --modalbg:rgba(251,250,247,.94); --wedge:rgba(34,31,27,.6); --dash:rgba(34,31,27,.5);
+  --emptycell:rgba(34,31,27,.06); --gwend:#b3411f; --err:#b3411f; --hi:rgba(255,255,255,.6);
+  --glow1:rgba(90,97,160,.10); --glow2:rgba(47,138,114,.08); --glow3:rgba(138,82,150,.08);
+} }
+.wrap[data-theme="light"]{
+  --bg:#EDEBE4; --ink:#201D19; --soft:#524D46; --faint:#7d766b;
+  --line:rgba(34,31,27,.15); --glass:rgba(255,255,255,.62); --glassb:rgba(34,31,27,.13);
+  --sticky:#F1EFE9; --placeholder:rgba(34,31,27,.42); --segbg:#201D19; --segfg:#EDEBE4;
+  --shadow:0 12px 30px rgba(34,31,27,.10); --wheelshadow:0 20px 50px rgba(34,31,27,.13);
+  --modalbg:rgba(251,250,247,.94); --wedge:rgba(34,31,27,.6); --dash:rgba(34,31,27,.5);
+  --emptycell:rgba(34,31,27,.06); --gwend:#b3411f; --err:#b3411f; --hi:rgba(255,255,255,.6);
+  --glow1:rgba(90,97,160,.10); --glow2:rgba(47,138,114,.08); --glow3:rgba(138,82,150,.08);
+}
+.wrap::before{
+  content:""; position:fixed; inset:-25%; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(38% 34% at 20% 6%, var(--glow1), transparent 70%),
+    radial-gradient(34% 30% at 88% 14%, var(--glow2), transparent 70%),
+    radial-gradient(42% 42% at 60% 102%, var(--glow3), transparent 70%);
+  animation:drift 26s ease-in-out infinite;
+}
+.board{position:relative; z-index:1; max-width:1080px; margin:0 auto;}
+.board.enter{animation:boardIn .34s ease both;}
+.board.enter .wheelcard,.board.enter .panel,.board.enter .card,.board.enter .footer{animation:riseIn .58s cubic-bezier(.16,.84,.24,1) both;}
+.board.enter .panel:nth-of-type(2){animation-delay:.05s;}
+.board.enter .panel:nth-of-type(3){animation-delay:.1s;}
+.board.enter .panel:nth-of-type(4){animation-delay:.15s;}
+.board.enter .panel:nth-of-type(5){animation-delay:.2s;}
+.board.enter .card:nth-child(2){animation-delay:.05s;}
+.board.enter .card:nth-child(3){animation-delay:.1s;}
+.board.enter .card:nth-child(4){animation-delay:.15s;}
+
+.topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px;}
+.brand{line-height:1;}
+.eyebrow{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--soft);margin-bottom:8px;}
+.title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-spacing:-.01em;background:linear-gradient(180deg,var(--ink),var(--soft));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.monthnav{display:flex;align-items:center;gap:12px;}
+.navbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--glassb);background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);cursor:pointer;font-size:17px;color:var(--ink);display:flex;align-items:center;justify-content:center;transition:.18s;}
+.navbtn:hover{border-color:var(--ink);}
+.monthlabel{text-align:center;min-width:140px;}
+.monthlabel .m{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px;}
+.monthlabel .y{font-family:'Space Mono',monospace;font-size:12px;color:var(--soft);letter-spacing:.16em;}
+
+.tabrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:22px;}
+.seg{display:inline-flex;background:var(--glass);border:1px solid var(--glassb);border-radius:13px;padding:3px;gap:2px;flex-wrap:wrap;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+.seg button{border:none;background:transparent;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);padding:9px 15px;border-radius:10px;cursor:pointer;transition:.18s;}
+.seg button.on{background:var(--segbg);color:var(--segfg);}
+.pillcluster{display:flex;gap:8px;flex-wrap:wrap;}
+.syncbtn{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--glassb);padding:9px 14px;border-radius:11px;cursor:pointer;transition:.18s;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+.syncbtn:hover{border-color:var(--ink);}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:0 0 auto;transition:.2s;}
+.sdot.on{background:#38E0A6;box-shadow:0 0 10px rgba(56,224,166,.7);}
+
+.layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:24px;align-items:start;}
+@media (max-width:860px){.layout{grid-template-columns:1fr;}}
+.wheelcard{position:relative;background:var(--glass);border:1px solid var(--glassb);border-radius:24px;padding:16px;backdrop-filter:blur(20px) saturate(1.1);-webkit-backdrop-filter:blur(20px) saturate(1.1);box-shadow:var(--wheelshadow),inset 0 1px 0 var(--hi);}
+.wheelcard::after{content:"";position:absolute;inset:0;border-radius:24px;pointer-events:none;background:radial-gradient(58% 58% at 50% 45%,var(--hi),transparent 70%);}
+.wheelcard.bloom::before{content:"";position:absolute;inset:-12%;border-radius:50%;pointer-events:none;z-index:2;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 62%);animation:bloom 1.2s ease-out;}
+svg{width:100%;height:auto;display:block;position:relative;}
+.cell{cursor:pointer;transition:fill-opacity .4s cubic-bezier(.2,.9,.2,1),filter .4s;transform-box:fill-box;transform-origin:center;}
+.cell.on{filter:drop-shadow(0 0 2.5px var(--hue)) drop-shadow(0 0 7px var(--hue));}
+.cell:not(.on):hover{fill-opacity:.34 !important;}
+.cell.pop{animation:pop .45s cubic-bezier(.2,1.5,.3,1);}
+.cell.sweep{animation:sweepIn .55s cubic-bezier(.2,.9,.2,1) both;}
+@keyframes sweepIn{0%{fill-opacity:0;transform:scale(.55);}70%{fill-opacity:.95;}100%{transform:scale(1);}}
+.burst{transform-box:fill-box;transform-origin:center;animation:burst .6s ease-out forwards;pointer-events:none;}
+.particle{transform-box:fill-box;transform-origin:center;animation:fly .9s ease-out forwards;pointer-events:none;}
+.daynum{font-family:'Space Mono',monospace;font-size:11px;}
+.hub{fill:var(--glass);}
+.hubglow{fill:var(--hi);animation:breathe 4.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
+.hub-m{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;letter-spacing:.02em;fill:var(--ink);}
+.hub-y{font-family:'Space Mono',monospace;font-size:13px;fill:var(--soft);letter-spacing:.18em;}
+.hub-p{font-family:'Space Mono',monospace;font-size:12px;fill:var(--soft);}
+
+.panel{position:relative;background:var(--glass);border:1px solid var(--glassb);border-radius:20px;padding:20px;margin-bottom:16px;backdrop-filter:blur(18px) saturate(1.1);-webkit-backdrop-filter:blur(18px) saturate(1.1);box-shadow:var(--shadow),inset 0 1px 0 var(--hi);transition:border-color .25s;}
+.panel:hover{border-color:var(--faint);}
+.panel h3{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--soft);margin:0 0 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.panel h3 .sub{letter-spacing:.04em;text-transform:none;font-weight:400;font-size:11px;color:var(--soft);}
+.habitrow{display:flex;align-items:center;gap:11px;padding:6px 0;}
+.swatch{width:13px;height:13px;border-radius:4px;flex:0 0 auto;}
+.hidx{font-family:'Space Mono',monospace;font-size:12px;color:var(--soft);width:16px;}
+.habitrow input{flex:1;border:none;background:transparent;font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);padding:3px 2px;border-bottom:1px solid transparent;min-width:0;}
+.habitrow input:focus{outline:none;border-bottom:1px solid var(--glassb);}
+.hpct{font-family:'Space Mono',monospace;font-size:11px;color:var(--soft);}
+.stats{display:flex;gap:10px;}
+.stat{flex:1;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:13px 14px;}
+.stat .n{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;}
+.stat .l{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-top:3px;}
+.field{width:100%;border:1px solid var(--glassb);border-radius:12px;background:var(--glass);font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);padding:11px 12px;resize:vertical;line-height:1.5;}
+.field::placeholder{color:var(--placeholder);}
+.field:focus{outline:none;border-color:var(--ink);}
+.quote{font-family:'Space Grotesk',sans-serif;font-style:italic;font-size:15px;line-height:1.5;color:var(--ink);border:none;background:transparent;width:100%;resize:none;text-align:center;}
+.quote:focus{outline:none;}
+.footer{margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.quotewrap{flex:1;min-width:260px;border-left:2px solid var(--wedge);padding-left:16px;}
+.reset{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);background:var(--glass);border:1px solid var(--glassb);padding:9px 14px;border-radius:10px;cursor:pointer;transition:.18s;}
+.reset:hover{color:var(--ink);border-color:var(--ink);}
+
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+@media (max-width:640px){.cards{grid-template-columns:repeat(2,1fr);}}
+.card{position:relative;background:var(--glass);border:1px solid var(--glassb);border-radius:16px;padding:15px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow);}
+.card .k{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:27px;line-height:1;}
+.card .t{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-top:6px;}
+.card .s{font-size:11px;color:var(--soft);margin-top:3px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:860px){.grid2{grid-template-columns:1fr;}}
+.chart{overflow:visible;}
+.c-lbl{font-family:'Inter',sans-serif;font-size:13px;fill:var(--ink);}
+.c-val{font-family:'Space Mono',monospace;font-size:12px;fill:var(--soft);}
+.c-axis{font-family:'Space Mono',monospace;font-size:10px;fill:var(--faint);}
+.insight{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45;}
+.insight:last-child{border-bottom:none;}
+.insight .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 auto;}
+.streakrow{display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1px solid var(--line);}
+.streakrow:last-child{border-bottom:none;}
+.streakrow .nm{flex:1;font-size:14px;}
+.streakrow .cur{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;}
+.streakrow .best{font-family:'Space Mono',monospace;font-size:11px;color:var(--soft);width:74px;text-align:right;}
+.databtns{display:flex;gap:10px;flex-wrap:wrap;}
+.dbtn{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--glassb);padding:10px 14px;border-radius:10px;cursor:pointer;transition:.18s;}
+.dbtn:hover{border-color:var(--ink);}
+.dbtn.prim{background:var(--segbg);color:var(--segfg);border-color:transparent;}
+.dbtn.gbtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:12px;font-size:12px;text-transform:none;letter-spacing:.02em;}
+.dbtn.gbtn svg{width:17px;height:17px;flex:0 0 auto;}
+.ordiv{display:flex;align-items:center;gap:10px;color:var(--soft);font-size:11px;font-family:'Space Mono',monospace;margin:14px 0;}
+.ordiv::before,.ordiv::after{content:"";flex:1;height:1px;background:var(--line);}
+
+.gscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:2px -4px 0;padding:0 4px 6px;}
+.gtable{border-collapse:separate;border-spacing:3px;}
+.gtable th,.gtable td{padding:0;}
+.gtable thead th{font-family:'Space Mono',monospace;font-size:10px;color:var(--soft);font-weight:400;height:22px;min-width:26px;text-align:center;}
+.gtable th.gcorner{position:sticky;left:0;background:var(--sticky);z-index:2;}
+.gday.gtoday{color:var(--ink);font-weight:700;}
+.gday.gwend{color:var(--gwend);}
+.gtable th.gname{position:sticky;left:0;background:var(--sticky);z-index:2;text-align:left;font-family:'Inter',sans-serif;font-weight:500;font-size:13px;color:var(--ink);white-space:nowrap;padding-right:12px;}
+.gname .swatch{display:inline-block;vertical-align:middle;margin-right:8px;}
+.gcell{width:26px;height:26px;border-radius:6px;background:var(--glass);border:1px solid var(--line);cursor:pointer;transition:transform .12s;}
+.gcell:hover{transform:scale(1.16);}
+.gcell.gfut{opacity:.4;}
+.gpct{font-family:'Space Mono',monospace;font-size:11px;color:var(--soft);text-align:right;padding-left:8px !important;white-space:nowrap;min-width:34px;}
+.gsum{font-family:'Space Mono',monospace;font-size:11px;color:var(--soft);text-align:center;}
+.gtotrow th,.gtotrow td{padding-top:7px !important;}
+.gtotname{color:var(--soft) !important;font-family:'Space Mono',monospace !important;font-size:10px !important;letter-spacing:.1em;text-transform:uppercase;font-weight:400 !important;}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-top:8px;}
+@media (max-width:520px){.legend{grid-template-columns:1fr;}}
+.legend .li{display:flex;align-items:center;gap:8px;font-size:13px;}
+.legend .li .n2{font-family:'Space Mono',monospace;font-size:11px;color:var(--soft);width:14px;}
+.legend .li .r2{margin-left:auto;font-family:'Space Mono',monospace;font-size:11px;color:var(--soft);}
+
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal.open{display:flex;}
+.modalback{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}
+.modalcard{position:relative;background:var(--modalbg);border:1px solid var(--glassb);border-radius:22px;padding:24px;width:100%;max-width:400px;backdrop-filter:blur(30px) saturate(1.2);-webkit-backdrop-filter:blur(30px) saturate(1.2);box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 var(--hi);animation:riseIn .4s cubic-bezier(.2,.8,.2,1);}
+.mclose{position:absolute;top:10px;right:14px;background:none;border:none;font-size:24px;line-height:1;color:var(--soft);cursor:pointer;}
+.mtitle{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:21px;margin-bottom:8px;}
+.mp{font-size:13.5px;line-height:1.55;color:var(--soft);margin:0 0 14px;}
+.minput{width:100%;border:1px solid var(--glassb);border-radius:11px;background:var(--glass);font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);padding:12px 13px;margin-bottom:10px;}
+.minput::placeholder{color:var(--placeholder);}
+.minput:focus{outline:none;border-color:var(--ink);}
+.mbtns{display:flex;gap:10px;margin-top:2px;}
+.mlink{background:none;border:none;color:var(--soft);font-size:12.5px;cursor:pointer;margin-top:12px;text-decoration:underline;padding:0;}
+.merr{font-size:12.5px;color:var(--err);min-height:16px;margin-bottom:8px;line-height:1.4;}
+.syncstat{display:flex;align-items:center;gap:9px;font-family:'Space Mono',monospace;font-size:12px;color:var(--soft);margin-bottom:6px;}
+.synced-ago{font-family:'Space Mono',monospace;font-size:11px;color:var(--soft);margin-bottom:16px;}
+.gearbtn{position:fixed;right:calc(16px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:45;width:52px;height:52px;border-radius:50%;border:1px solid var(--glassb);background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);transition:transform .3s cubic-bezier(.2,.9,.2,1),border-color .2s;}
+.gearbtn:hover{border-color:var(--ink);}
+.gearbtn:active{transform:scale(.9) rotate(40deg);}
+.gearbtn svg{width:22px;height:22px;}
+.trackswitch{display:flex;justify-content:center;margin-bottom:16px;}
+.trackswitch .setseg{width:100%;max-width:260px;}
+.setgrp{margin-bottom:18px;}
+.setgrp:last-child{margin-bottom:0;}
+.setlabel{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--soft);margin-bottom:9px;}
+.setseg{display:flex;gap:4px;background:var(--glass);border:1px solid var(--glassb);border-radius:12px;padding:4px;}
+.setseg button{flex:1;border:none;background:transparent;color:var(--soft);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:9px;border-radius:9px;cursor:pointer;transition:.16s;}
+.setseg button.on{background:var(--segbg);color:var(--segfg);}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);}
+.setrow:last-child{border-bottom:none;}
+.setrow .lab{font-size:14px;color:var(--ink);}
+.setrow .subl{font-size:11.5px;color:var(--soft);margin-top:2px;}
+.toggle{width:46px;height:27px;border-radius:14px;border:1px solid var(--glassb);background:var(--glass);position:relative;cursor:pointer;flex:0 0 auto;transition:.2s;}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;background:var(--faint);transition:.22s cubic-bezier(.2,.9,.2,1);}
+.toggle.on{background:#38E0A6;border-color:transparent;}
+.toggle.on::after{left:21px;background:#08080B;}
+.setbtns{display:flex;gap:8px;flex-wrap:wrap;}
+.wrap.calm *{animation:none !important;transition:none !important;}
+.wrap.calm::before{animation:none !important;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}.wrap::before{animation:none;}}
+</style>
+</head>
+<body>
+<div id="root" class="wrap"></div>
+<input type="file" id="importer" accept="application/json,.json" style="display:none" />
+
+<button id="gearbtn" class="gearbtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+<div class="modal" id="setmodal" aria-hidden="true">
+  <div class="modalback"></div>
+  <div class="modalcard" role="dialog" aria-modal="true" aria-label="Settings">
+    <button class="mclose" id="setclose" aria-label="Close">&times;</button>
+    <div id="setcontent"></div>
+  </div>
+</div>
+
+<div class="modal" id="syncmodal" aria-hidden="true">
+  <div class="modalback"></div>
+  <div class="modalcard" role="dialog" aria-modal="true" aria-label="Sync">
+    <button class="mclose" id="syncclose" aria-label="Close">&times;</button>
+    <div id="synccontent"></div>
+  </div>
+</div>
+
+<script>
+/* ================= config ================= */
+const HUES = ["#C2513E","#D5883A","#B79A34","#5F8A46","#2F8A72","#3A7BA0","#5661A0","#8A5296"];
+const DEFAULT_HABITS = ["Water 5L","Walk 8km","Diet - no cheat","All supplements","Skincare","Class","Revision","Answer writing"];
+const DEFAULT_GOALS = "UPSC CSE 2027";
+const DEFAULT_QUOTE = "Discipline doesn't care how you feel. It needs to be done, even when you don't feel like it.";
+const CATS = [{ name:"Body", idx:[0,1,2,3,4] }, { name:"UPSC", idx:[5,6,7] }];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+/* ================= geometry ================= */
+const CX=320, CY=320, R_OUTER=296, R_HUB=96, BAND=(R_OUTER-R_HUB)/8, LABEL_R=309;
+function polar(r,deg){ const a=((deg-90)*Math.PI)/180; return [CX+r*Math.cos(a), CY+r*Math.sin(a)]; }
+function sector(rIn,rOut,a0,a1){
+  const [x0o,y0o]=polar(rOut,a0), [x1o,y1o]=polar(rOut,a1), [x1i,y1i]=polar(rIn,a1), [x0i,y0i]=polar(rIn,a0);
+  const large=a1-a0<=180?0:1;
+  return `M ${x0o} ${y0o} A ${rOut} ${rOut} 0 ${large} 1 ${x1o} ${y1o} L ${x1i} ${y1i} A ${rIn} ${rIn} 0 ${large} 0 ${x0i} ${y0i} Z`;
+}
+function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+function monthKey(y,m){ return `${y}-${String(m+1).padStart(2,"0")}`; }
+function fmt(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* ================= storage ================= */
+function loadKey(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch{ return fallback; } }
+function saveKey(key,value){ try{ localStorage.setItem(key,JSON.stringify(value)); }catch(e){ console.error(e); } }
+/* per-key change stamps power cloud merge; the app works fine without them */
+function loadMeta(){ return loadKey("disc:meta", {}); }
+function saveMeta(m){ saveKey("disc:meta", m); }
+function bump(key){ const m=loadMeta(); m[key]=Date.now(); saveMeta(m); }
+function localDump(){ const s={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.indexOf("disc:")===0 && k!=="disc:meta") s[k]=localStorage.getItem(k); } return s; }
+function cloudPush(){ if(window.Cloud && window.Cloud.schedulePush) window.Cloud.schedulePush(); }
+
+/* ================= feel: sound + haptics + fx ================= */
+let soundOn = loadKey("disc:sound", true);
+let calm = loadKey("disc:calm", false);
+let _ac=null;
+function actx(){ if(!_ac){ try{ _ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return _ac; }
+function setSound(v){ soundOn=v; saveKey("disc:sound", v); }
+function prefersLight(){ try{ return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches; }catch(e){ return false; } }
+function currentEffective(){ const t=loadKey("disc:theme","auto"); return (t==="light"||t==="dark") ? t : (prefersLight()?"light":"dark"); }
+function applyTheme(t){
+  const root=document.getElementById("root"); if(!root) return;
+  if(t==="auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", t);
+  saveKey("disc:theme", t);
+  const eff = (t==="auto") ? (prefersLight()?"light":"dark") : t;
+  const meta=document.querySelector('meta[name="theme-color"]'); if(meta) meta.setAttribute("content", eff==="light"?"#EDEBE4":"#08080B");
+}
+function toggleTheme(){ const eff=currentEffective(); applyTheme(eff==="dark"?"light":"dark"); updateThemeButton(); }
+function updateThemeButton(){ const b=document.getElementById("themebtn"); if(!b) return; b.innerHTML=`<span class="sdot on"></span>${currentEffective()==="dark"?"Dark":"Light"}`; }
+function applyCalm(){ const r=document.getElementById("root"); if(r) r.classList.toggle("calm", !!calm); }
+function setCalm(v){ calm=v; saveKey("disc:calm", v); applyCalm(); }
+function setTrack(m){ trackMode=m; saveKey("disc:track", m); entrance=true; render(); }
+function trackView(){
+  const sw = `<div class="trackswitch"><div class="setseg">
+     <button class="${trackMode==='wheel'?'on':''}" data-track="wheel">Wheel</button>
+     <button class="${trackMode==='grid'?'on':''}" data-track="grid">Grid</button>
+  </div></div>`;
+  return sw + (trackMode==='grid' ? gridView() : wheelView());
+}
+/* ---- settings sheet ---- */
+let setOpen=false;
+function setModalHTML(){
+  const pref=loadKey("disc:theme","auto");
+  const acct = sync.user ? esc(sync.email||"account") : (sync.configured? "Not signed in" : "Sync not configured");
+  return `<div class="mtitle">Settings</div>
+   <div class="setgrp"><div class="setlabel">Appearance</div>
+     <div class="setseg" id="themeseg">
+       <button data-theme="light" class="${pref==='light'?'on':''}">Light</button>
+       <button data-theme="dark" class="${pref==='dark'?'on':''}">Dark</button>
+       <button data-theme="auto" class="${(pref!=='light'&&pref!=='dark')?'on':''}">Auto</button>
+     </div></div>
+   <div class="setgrp"><div class="setlabel">Feedback</div>
+     <div class="setrow"><div><div class="lab">Sound</div><div class="subl">Tick &amp; celebration sounds</div></div><div class="toggle${soundOn?' on':''}" id="tgl-sound" role="switch" aria-checked="${soundOn}"></div></div>
+     <div class="setrow"><div><div class="lab">Reduce motion</div><div class="subl">Calmer, fewer animations</div></div><div class="toggle${calm?' on':''}" id="tgl-calm" role="switch" aria-checked="${calm}"></div></div>
+   </div>
+   <div class="setgrp"><div class="setlabel">Account &amp; sync</div>
+     <div class="setrow"><div><div class="lab">${sync.user?'Sync on':'Cloud sync'}</div><div class="subl">${acct}${sync.user&&sync.lastSync?' &middot; '+agoText(sync.lastSync):''}</div></div>
+       <button class="dbtn" id="set-sync">${sync.user?'Manage':'Sign in'}</button></div>
+   </div>
+   <div class="setgrp"><div class="setlabel">Data</div>
+     <div class="setbtns">
+       <button class="dbtn" id="set-csvm">CSV month</button>
+       <button class="dbtn" id="set-csva">CSV all</button>
+       <button class="dbtn" id="set-json">Backup</button>
+       <button class="dbtn" id="set-restore">Restore</button>
+     </div>
+   </div>
+   <div class="setgrp"><div class="setlabel">About</div>
+     <div class="subl" style="font-size:12px;line-height:1.55">Discipline &mdash; Habit Wheel. Saves on this device and syncs to your account when signed in.</div>
+   </div>`;
+}
+function wireSetModal(){
+  const c=document.getElementById("setcontent"); if(!c) return;
+  c.querySelectorAll("#themeseg button").forEach(b=> b.onclick=()=>{ applyTheme(b.dataset.theme); paintSet(); });
+  const ts=c.querySelector("#tgl-sound"); if(ts) ts.onclick=()=>{ setSound(!soundOn); if(soundOn) playTick(true); paintSet(); };
+  const tc=c.querySelector("#tgl-calm"); if(tc) tc.onclick=()=>{ setCalm(!calm); paintSet(); };
+  const ss=c.querySelector("#set-sync"); if(ss) ss.onclick=()=>{ closeSet(); openSync(); };
+  const cm=c.querySelector("#set-csvm"); if(cm) cm.onclick=()=>exportCSV(false);
+  const ca=c.querySelector("#set-csva"); if(ca) ca.onclick=()=>exportCSV(true);
+  const bj=c.querySelector("#set-json"); if(bj) bj.onclick=exportData;
+  const rr=c.querySelector("#set-restore"); if(rr) rr.onclick=()=>document.getElementById("importer").click();
+}
+function paintSet(){ if(!setOpen) return; const c=document.getElementById("setcontent"); if(!c) return; c.innerHTML=setModalHTML(); wireSetModal(); }
+function openSet(){ setOpen=true; const m=document.getElementById("setmodal"); m.classList.add("open"); m.setAttribute("aria-hidden","false"); paintSet(); }
+function closeSet(){ setOpen=false; const m=document.getElementById("setmodal"); m.classList.remove("open"); m.setAttribute("aria-hidden","true"); }
+function playTick(on, fill){
+  if(!soundOn) return; const ac=actx(); if(!ac) return; if(ac.state==="suspended") ac.resume();
+  fill=fill||0;
+  const t=ac.currentTime, o=ac.createOscillator(), g=ac.createGain();
+  o.type="sine";
+  const base = on ? (520 + fill*320) : 340;
+  o.frequency.setValueAtTime(base, t);
+  o.frequency.exponentialRampToValueAtTime(on? base+300 : 250, t+0.07);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.11,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+0.19);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.22);
+}
+function playChord(){
+  if(!soundOn) return; const ac=actx(); if(!ac) return; if(ac.state==="suspended") ac.resume();
+  const t=ac.currentTime;
+  [523.25,659.25,783.99,1046.50].forEach((f,i)=>{ const st=t+i*0.085, o=ac.createOscillator(), g=ac.createGain(); o.type="triangle"; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,st); g.gain.exponentialRampToValueAtTime(0.10,st+0.02); g.gain.exponentialRampToValueAtTime(0.0001,st+0.7);
+    o.connect(g).connect(ac.destination); o.start(st); o.stop(st+0.75); });
+}
+function haptic(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+
+const SVGNS="http://www.w3.org/2000/svg";
+function tickFx(d,h,on){
+  const svg=document.querySelector("#wheel svg"); if(!svg) return;
+  const seg=svg.querySelector('path.cell[data-d="'+d+'"][data-h="'+h+'"]');
+  if(seg){ seg.classList.remove("pop"); void seg.getBBox(); seg.classList.add("pop"); setTimeout(()=>seg&&seg.classList.remove("pop"),480); }
+  if(!on) return;
+  const dim=daysInMonth(year,month), step=360/dim;
+  const midA=(d-0.5)*step, midR=R_OUTER-(h+0.5)*BAND;
+  const p=polar(midR,midA);
+  const c=document.createElementNS(SVGNS,"circle");
+  c.setAttribute("cx",p[0]); c.setAttribute("cy",p[1]); c.setAttribute("r",6);
+  c.setAttribute("fill","none"); c.setAttribute("stroke",HUES[h]); c.setAttribute("stroke-width","2");
+  c.setAttribute("class","burst"); svg.appendChild(c); setTimeout(()=>c.remove(),620);
+}
+function perfectFx(){
+  const card=document.getElementById("wheel"); const svg=document.querySelector("#wheel svg");
+  if(card){ card.classList.remove("bloom"); void card.offsetWidth; card.classList.add("bloom"); setTimeout(()=>card&&card.classList.remove("bloom"),1200); }
+  if(svg){ for(let i=0;i<16;i++){ const ang=Math.random()*Math.PI*2, dist=120+Math.random()*140;
+      const pt=document.createElementNS(SVGNS,"circle"); pt.setAttribute("cx",CX); pt.setAttribute("cy",CY); pt.setAttribute("r",(2.5+Math.random()*2.5).toFixed(1));
+      pt.setAttribute("fill",HUES[i%8]); pt.setAttribute("class","particle");
+      pt.style.setProperty("--tx",(Math.cos(ang)*dist).toFixed(1)+"px"); pt.style.setProperty("--ty",(Math.sin(ang)*dist).toFixed(1)+"px");
+      svg.appendChild(pt); setTimeout(()=>pt.remove(),950); } }
+  haptic([14,40,14,40,24]); playChord();
+}
+
+/* ================= CSV export ================= */
+function csvCell(s){ s=String(s); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
+function monthCsvRows(y,mo){
+  const g=(loadKey("disc:month:"+monthKey(y,mo),{grid:{}}).grid)||{}; const dim=daysInMonth(y,mo); const out=[];
+  for(let d=1; d<=dim; d++){ const row=g[d]||[]; const vals=habits.map((_,i)=> row[i]?1:0); out.push([monthKey(y,mo)+"-"+String(d).padStart(2,"0"), ...vals, vals.reduce((a,b)=>a+b,0)]); }
+  return out;
+}
+function exportCSV(all){
+  const header=["date", ...habits, "total"]; let rows=[];
+  if(all){ const mk=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.indexOf("disc:month:")===0) mk.push(k.slice(11)); } mk.sort();
+    mk.forEach(k=>{ const parts=k.split("-").map(Number); rows=rows.concat(monthCsvRows(parts[0],parts[1]-1)); });
+  } else rows=monthCsvRows(year,month);
+  const csv=[header,...rows].map(r=>r.map(csvCell).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"}), url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download= all?"discipline-all-history.csv":("discipline-"+monthKey(year,month)+".csv"); a.click(); URL.revokeObjectURL(url);
+}
+function agoText(ts){ if(!ts) return ""; const s=Math.max(0,(Date.now()-ts)/1000); if(s<10)return"just now"; if(s<60)return Math.floor(s)+"s ago"; if(s<3600)return Math.floor(s/60)+"m ago"; if(s<86400)return Math.floor(s/3600)+"h ago"; return Math.floor(s/86400)+"d ago"; }
+
+function animateCounts(){
+  try{
+    document.querySelectorAll(".stat .n, .card .k").forEach(el=>{
+      const m=/^(\d+)(%?)$/.exec((el.textContent||"").trim()); if(!m) return;
+      const to=+m[1], suf=m[2], dur=620, t0=performance.now();
+      el.textContent="0"+suf;
+      function step(t){ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3); el.textContent=Math.round(to*e)+suf; if(p<1) requestAnimationFrame(step); }
+      requestAnimationFrame(step);
+    });
+  }catch(e){}
+}
+function weekStats(end,days){
+  const dates=allDates(); let done=0,slots=0,active=0; const per=new Array(8).fill(0);
+  for(let i=0;i<days;i++){ const dd=new Date(end); dd.setDate(dd.getDate()-i); const row=dates[fmt(dd)]; slots+=8; if(row){ let c=0; for(let h=0;h<8;h++){ if(row[h]){done++;per[h]++;c++;} } if(c>0)active++; } }
+  return {done,slots,pct:done/Math.max(1,slots),per,active};
+}
+function weeklyReview(){
+  const wk=weekStats(new Date(today),7);
+  const pe=new Date(today); pe.setDate(pe.getDate()-7); const pv=weekStats(pe,7);
+  const delta=Math.round((wk.pct-pv.pct)*100);
+  let bi=0,wi=0; wk.per.forEach((v,i)=>{ if(v>wk.per[bi])bi=i; if(v<wk.per[wi])wi=i; });
+  const arrow = delta>0?"&#9650;":delta<0?"&#9660;":"&ndash;";
+  return `<div class="panel"><h3>Weekly review <span class="sub">last 7 days</span></h3>
+    <div class="cards" style="margin-bottom:12px">
+      <div class="card"><div class="k">${Math.round(wk.pct*100)}%</div><div class="t">Complete</div><div class="s">${arrow} ${Math.abs(delta)} pts vs last week</div></div>
+      <div class="card"><div class="k">${wk.done}</div><div class="t">Ticks</div><div class="s">of ${wk.slots}</div></div>
+      <div class="card"><div class="k">${wk.active}/7</div><div class="t">Active days</div><div class="s">with a tick</div></div>
+      <div class="card"><div class="k">${Math.round((wk.per[bi]/7)*100)}%</div><div class="t">Top habit</div><div class="s">${esc(habits[bi])}</div></div>
+    </div>
+    <div class="insight"><span class="dot" style="background:${HUES[wi]}"></span><span>Weakest this week: <b>${esc(habits[wi])}</b> at ${Math.round((wk.per[wi]/7)*100)}% - the one to defend tomorrow.</span></div>
+  </div>`;
+}
+
+/* ================= state ================= */
+const today = new Date(); today.setHours(0,0,0,0);
+let year = today.getFullYear();
+let month = today.getMonth();
+let habits = DEFAULT_HABITS.slice();
+let goals = DEFAULT_GOALS;
+let quote = DEFAULT_QUOTE;
+let grid = {};
+let notes = "";
+let view = "track";
+let trackMode = loadKey("disc:track","wheel");
+let sync = { configured:false, user:false, email:"", status:"Local only", busy:false, err:"", formEmail:"", lastSync: loadKey("disc:lastsync",0) };
+let entrance = true;
+let syncModalOpen = false;
+
+function loadConfig(){
+  const cfg = loadKey("disc:config", null);
+  if(cfg){
+    if(Array.isArray(cfg.habits) && cfg.habits.length===8) habits = cfg.habits;
+    if(typeof cfg.goals==="string") goals = cfg.goals;
+    if(typeof cfg.quote==="string") quote = cfg.quote;
+  }
+}
+function saveConfig(){ saveKey("disc:config", {habits, goals, quote}); bump("disc:config"); cloudPush(); }
+function loadMonth(){ const d = loadKey(`disc:month:${monthKey(year,month)}`, {grid:{},notes:""}); grid = d.grid || {}; notes = d.notes || ""; }
+function saveMonth(){ const k=`disc:month:${monthKey(year,month)}`; saveKey(k, {grid, notes}); bump(k); cloudPush(); }
+
+/* ================= cross-month aggregation ================= */
+function allDates(){
+  const out = {};
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.indexOf("disc:month:")===0){
+      const mk = k.slice("disc:month:".length);
+      const data = loadKey(k, {grid:{}});
+      const g = data.grid || {};
+      for(const dStr in g){ out[`${mk}-${String(Number(dStr)).padStart(2,"0")}`] = g[dStr]; }
+    }
+  }
+  return out;
+}
+const isDone = (row,h)=> !!(row && row[h]);
+const isPerfect = (row)=> !!(row && row.length===8 && row.every(Boolean));
+
+function currentStreak(dates, cond){
+  let s=0; const d=new Date(today);
+  if(!cond(dates[fmt(d)])) d.setDate(d.getDate()-1);
+  while(cond(dates[fmt(d)])){ s++; d.setDate(d.getDate()-1); }
+  return s;
+}
+function longestStreak(dates, cond){
+  const keys = Object.keys(dates).sort();
+  if(!keys.length) return 0;
+  const start = new Date(keys[0]+"T00:00:00");
+  let best=0, cur=0; const d=new Date(start);
+  while(d<=today){ if(cond(dates[fmt(d)])){ cur++; if(cur>best) best=cur; } else cur=0; d.setDate(d.getDate()+1); }
+  return best;
+}
+
+/* per-month overall completion (used by the Analysis tab) */
+function overallFor(y,mo){
+  const data=loadKey(`disc:month:${monthKey(y,mo)}`, {grid:{}}); const g=data.grid||{};
+  const dim=daysInMonth(y,mo);
+  const isCur = y===today.getFullYear() && mo===today.getMonth();
+  const elapsed = isCur ? Math.min(dim, today.getDate()) : dim;
+  let done=0; for(const d in g){ const row=g[d]; if(row) for(let h=0;h<8;h++) if(row[h]) done++; }
+  return { pct: done/(Math.max(1,elapsed)*8), done, hasData:Object.keys(g).length>0 };
+}
+function lastMonths(n){
+  const arr=[];
+  for(let i=n-1;i>=0;i--){ let mm=month-i, yy=year; while(mm<0){ mm+=12; yy--; } arr.push({y:yy,m:mm}); }
+  return arr;
+}
+
+/* ================= actions ================= */
+function toggle(d,h){
+  const row = grid[d] ? grid[d].slice() : new Array(8).fill(false);
+  const on = !row[h]; row[h] = on; grid[d] = row; saveMonth();
+  const perfect = on && grid[d].length===8 && grid[d].every(Boolean);
+  const fill = grid[d].filter(Boolean).length/8;
+  render();
+  playTick(on, fill); haptic(on?(8+Math.round(fill*16)):6); tickFx(d,h,on);
+  if(perfect) perfectFx();
+}
+function shiftMonth(delta){
+  let m=month+delta, y=year;
+  if(m<0){ m=11; y--; } if(m>11){ m=0; y++; }
+  month=m; year=y; entrance=true; loadMonth(); render();
+}
+function resetMonth(){ if(!confirm("Clear all ticks for this month?")) return; grid={}; saveMonth(); render(); }
+
+function exportData(){
+  const dump={};
+  for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.indexOf("disc:")===0) dump[k]=localStorage.getItem(k); }
+  const blob=new Blob([JSON.stringify(dump,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download=`discipline-backup-${fmt(new Date())}.json`; a.click(); URL.revokeObjectURL(url);
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const obj=JSON.parse(r.result);
+    Object.keys(obj).forEach(k=>{ if(k.indexOf("disc:")===0) localStorage.setItem(k,obj[k]); });
+    /* mark restored data as freshest so it wins on the next cloud sync */
+    const m=loadMeta(); Object.keys(obj).forEach(k=>{ if(k.indexOf("disc:")===0 && k!=="disc:meta") m[k]=Date.now(); }); saveMeta(m);
+    loadConfig(); loadMonth(); render(); cloudPush(); alert("Backup restored.");
+  }catch(e){ alert("Could not read that file."); } };
+  r.readAsText(file);
+}
+
+/* ================= cloud merge (called by the sync layer) ================= */
+function applyRemote(store, rmeta){
+  store=store||{}; rmeta=rmeta||{};
+  const lmeta=loadMeta(); let changed=false, pushNeeded=false;
+  const keys=new Set([...Object.keys(store), ...Object.keys(lmeta)]);
+  for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.indexOf("disc:")===0 && k!=="disc:meta") keys.add(k); }
+  keys.forEach(k=>{
+    const rt=rmeta[k]||0, lt=lmeta[k]||0;
+    const hasR=Object.prototype.hasOwnProperty.call(store,k);
+    if(hasR && rt>lt){ localStorage.setItem(k, store[k]); lmeta[k]=rt; changed=true; }
+    else if(lt>rt || (!hasR && localStorage.getItem(k)!=null)){ pushNeeded=true; }
+  });
+  saveMeta(lmeta);
+  if(changed){ loadConfig(); loadMonth(); render(); }
+  if(pushNeeded) cloudPush();
+}
+
+/* ================= month metrics ================= */
+function monthMetrics(){
+  const dim=daysInMonth(year,month);
+  const isCurrent = year===today.getFullYear() && month===today.getMonth();
+  const elapsed = isCurrent ? Math.min(dim, today.getDate()) : dim;
+  const perHabit=new Array(8).fill(0);
+  const daily=new Array(dim).fill(0);
+  let doneTotal=0, perfectDays=0, activeDays=0;
+  for(let d=1; d<=dim; d++){
+    const row=grid[d]; if(!row) continue;
+    let c=0; for(let h=0;h<8;h++) if(row[h]){ perHabit[h]++; doneTotal++; c++; }
+    daily[d-1]=c; if(c>0) activeDays++; if(c===8) perfectDays++;
+  }
+  const denom=Math.max(1,elapsed);
+  return { dim, isCurrent, elapsed, perHabit, daily, doneTotal, perfectDays, activeDays, overall: doneTotal/(denom*8) };
+}
+function dowMetrics(m){
+  const sum=new Array(7).fill(0), cnt=new Array(7).fill(0);
+  for(let d=1; d<=m.elapsed; d++){ const wd=(new Date(year,month,d).getDay()+6)%7; sum[wd]+=m.daily[d-1]; cnt[wd]++; }
+  return sum.map((s,i)=> cnt[i] ? s/cnt[i]/8 : 0);
+}
+function catRate(m, idxs){ let done=0; idxs.forEach(i=>done+=m.perHabit[i]); return done/(Math.max(1,m.elapsed)*idxs.length); }
+
+/* ================= wheel ================= */
+function buildWheel(){
+  const dim=daysInMonth(year,month), step=360/dim, APAD=0.7, RPAD=1.6;
+  const isCurrent = year===today.getFullYear() && month===today.getMonth();
+  const todayNum=today.getDate();
+  const m=monthMetrics(); const pct=Math.round(m.overall*100);
+  let cells="";
+  for(let d=1; d<=dim; d++){
+    const a0=(d-1)*step+APAD, a1=d*step-APAD;
+    for(let h=0; h<8; h++){
+      const rOut=R_OUTER-h*BAND-RPAD, rIn=R_OUTER-(h+1)*BAND+RPAD;
+      const on=grid[d]&&grid[d][h];
+      cells+=`<path d="${sector(rIn,rOut,a0,a1)}" class="cell${on?' on':''}${(entrance&&on)?' sweep':''}" style="--hue:${HUES[h]}${(entrance&&on)?`;animation-delay:${(0.12+(d/dim)*0.5).toFixed(2)}s`:''}" fill="${HUES[h]}" fill-opacity="${on?0.95:0.06}" stroke="${HUES[h]}" stroke-opacity="${on?0:0.14}" stroke-width="0.6" data-d="${d}" data-h="${h}"></path>`;
+    }
+  }
+  let labels="";
+  for(let d=1; d<=dim; d++){
+    const mid=(d-0.5)*step; const [lx,ly]=polar(LABEL_R,mid); const isT=isCurrent&&d===todayNum;
+    labels+=`<text x="${lx}" y="${ly}" class="daynum" text-anchor="middle" dominant-baseline="central" fill="${isT?'var(--ink)':'var(--faint)'}" font-weight="${isT?700:400}">${d}</text>`;
+  }
+  let wedge="";
+  if(isCurrent){ const a0=(todayNum-1)*step+0.3, a1=todayNum*step-0.3; wedge=`<path d="${sector(R_HUB-3,R_OUTER+2,a0,a1)}" fill="none" stroke="var(--wedge)" stroke-width="1.6" stroke-opacity="0.9" pointer-events="none"></path>`; }
+  return `<svg viewBox="0 0 640 640" role="img" aria-label="Habit wheel">${cells}${wedge}${labels}
+    <circle cx="${CX}" cy="${CY}" r="${R_HUB+4}" class="hubglow"></circle>
+    <circle cx="${CX}" cy="${CY}" r="${R_HUB-6}" class="hub" stroke="var(--glassb)"></circle>
+    <text x="${CX}" y="${CY-14}" class="hub-m" text-anchor="middle">${MONTHS[month].slice(0,3).toUpperCase()}</text>
+    <text x="${CX}" y="${CY+8}" class="hub-y" text-anchor="middle">${year}</text>
+    <text x="${CX}" y="${CY+30}" class="hub-p" text-anchor="middle">${pct}% done</text></svg>`;
+}
+
+/* ================= charts (pure SVG) ================= */
+function chartHBars(items){
+  const rowH=32, pad=6, w=640, labelW=150, barX=labelW+12, barW=w-barX-56;
+  const h=pad*2+items.length*rowH;
+  let s="";
+  items.forEach((it,i)=>{
+    const y=pad+i*rowH+rowH/2; const bw=Math.max(3,barW*it.rate);
+    s+=`<text x="${labelW}" y="${y}" text-anchor="end" dominant-baseline="central" class="c-lbl">${esc(it.name)}</text>
+    <rect x="${barX}" y="${y-9}" width="${barW}" height="18" rx="9" fill="${it.color}" opacity="0.10"/>
+    <rect x="${barX}" y="${y-9}" width="${bw}" height="18" rx="9" fill="${it.color}"/>
+    <text x="${barX+barW+6}" y="${y}" dominant-baseline="central" class="c-val">${Math.round(it.rate*100)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">${s}</svg>`;
+}
+function chartDaily(m){
+  const w=640,h=210,pL=26,pR=10,pT=12,pB=22, maxY=8;
+  const n=m.dim;
+  const X=i=> pL+(w-pL-pR)*(n<=1?0:i/(n-1));
+  const Y=v=> pT+(h-pT-pB)*(1-v/maxY);
+  let gl="";
+  for(let g=0; g<=8; g+=2){ const y=Y(g); gl+=`<line x1="${pL}" y1="${y}" x2="${w-pR}" y2="${y}" stroke="var(--line)"/><text x="${pL-6}" y="${y}" text-anchor="end" dominant-baseline="central" class="c-axis">${g}</text>`; }
+  const e=Math.max(1,m.elapsed);
+  let area="M "+X(0)+" "+Y(0), line="";
+  for(let i=0;i<e;i++){ const x=X(i), y=Y(m.daily[i]); area+=` L ${x} ${y}`; line+=(i===0?`M ${x} ${y}`:` L ${x} ${y}`); }
+  area+=` L ${X(e-1)} ${Y(0)} Z`;
+  let roll="";
+  for(let i=0;i<e;i++){ let sum=0,c=0; for(let j=Math.max(0,i-6);j<=i;j++){ sum+=m.daily[j]; c++; } const x=X(i), y=Y(sum/c); roll+=(i===0?`M ${x} ${y}`:` L ${x} ${y}`); }
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">${gl}
+    <path d="${area}" fill="#2F8A72" opacity="0.12"/>
+    <path d="${line}" fill="none" stroke="#2F8A72" stroke-width="2"/>
+    <path d="${roll}" fill="none" stroke="var(--dash)" stroke-width="1.6" stroke-dasharray="4 4" opacity="0.7"/></svg>`;
+}
+function chartDOW(dow){
+  const w=640,h=190,pL=18,pR=10,pT=12,pB=26; const n=7; const gap=14;
+  const bw=(w-pL-pR-gap*(n-1))/n; const maxH=h-pT-pB;
+  let s="";
+  dow.forEach((v,i)=>{ const x=pL+i*(bw+gap); const bh=Math.max(2,maxH*v); const y=pT+(maxH-bh);
+    s+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6" fill="#3A7BA0"/>
+    <text x="${x+bw/2}" y="${h-9}" text-anchor="middle" class="c-axis">${DOW[i]}</text>
+    <text x="${x+bw/2}" y="${y-5}" text-anchor="middle" class="c-val">${Math.round(v*100)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">${s}</svg>`;
+}
+function chartCalendar(m){
+  const cols=7, cell=78, gap=8, pT=30;
+  const first=(new Date(year,month,1).getDay()+6)%7;
+  const rows=Math.ceil((first+m.dim)/cols);
+  const w=cols*cell+(cols-1)*gap;
+  const h=pT+rows*cell+(rows-1)*gap;
+  let s="";
+  DOW.forEach((d,i)=>{ s+=`<text x="${i*(cell+gap)+cell/2}" y="16" text-anchor="middle" class="c-axis">${d[0]}</text>`; });
+  for(let d=1; d<=m.dim; d++){
+    const idx=first+d-1; const cx=(idx%cols)*(cell+gap); const cy=pT+Math.floor(idx/cols)*(cell+gap);
+    const c=m.daily[d-1]; const op=c/8;
+    const isT=m.isCurrent && d===today.getDate();
+    s+=`<rect x="${cx}" y="${cy}" width="${cell}" height="${cell}" rx="14" fill="#2F8A72" fill-opacity="${(0.10+op*0.85).toFixed(3)}" stroke="${isT?'var(--ink)':'var(--line)'}" stroke-width="${isT?2:1}"/>
+    <text x="${cx+10}" y="${cy+22}" class="c-axis" fill="${op>0.55?'#fff':'#8b857b'}">${d}</text>
+    <text x="${cx+cell-10}" y="${cy+cell-12}" text-anchor="end" class="c-val" fill="${op>0.55?'#fff':'#6B655C'}">${c||""}</text>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">${s}</svg>`;
+}
+
+/* ---- analysis charts ---- */
+function chartRadar(rates){
+  const cx=175, cy=168, R=118, n=8;
+  const ang=i=> (i*2*Math.PI/n) - Math.PI/2;
+  let rings="";
+  [0.25,0.5,0.75,1].forEach(t=>{ let p=""; for(let i=0;i<=n;i++){ const a=ang(i%n); const x=cx+R*t*Math.cos(a), y=cy+R*t*Math.sin(a); p+=(i===0?`M ${x} ${y}`:` L ${x} ${y}`);} rings+=`<path d="${p} Z" fill="none" stroke="var(--line)"/>`; });
+  let axes="";
+  for(let i=0;i<n;i++){ const a=ang(i); const x=cx+R*Math.cos(a), y=cy+R*Math.sin(a); axes+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`; const lx=cx+(R+15)*Math.cos(a), ly=cy+(R+15)*Math.sin(a); axes+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" class="c-axis" fill="${HUES[i]}" font-weight="700">${i+1}</text>`; }
+  let poly="", dots="";
+  for(let i=0;i<n;i++){ const a=ang(i); const r=R*Math.max(0.015,rates[i]); const x=cx+r*Math.cos(a), y=cy+r*Math.sin(a); poly+=(i===0?`M ${x} ${y}`:` L ${x} ${y}`); dots+=`<circle cx="${x}" cy="${y}" r="3.4" fill="${HUES[i]}"/>`; }
+  poly+=" Z";
+  return `<svg viewBox="0 0 350 336" class="chart">${rings}${axes}<path d="${poly}" fill="#2F8A72" fill-opacity="0.14" stroke="#2F8A72" stroke-width="1.6"/>${dots}</svg>`;
+}
+function chartCumulative(m){
+  const w=640,h=210,pL=34,pR=16,pT=16,pB=22; const e=Math.max(1,m.elapsed); const maxY=Math.max(8,e*8);
+  const X=i=> pL+(w-pL-pR)*(e<=1?0:i/(e-1));
+  const Y=v=> pT+(h-pT-pB)*(1-Math.min(1,v/maxY));
+  let cum=0, line="", area="M "+X(0)+" "+Y(0);
+  for(let i=0;i<e;i++){ cum+=m.daily[i]; const x=X(i),y=Y(cum); line+=(i===0?`M ${x} ${y}`:` L ${x} ${y}`); area+=` L ${x} ${y}`; }
+  area+=` L ${X(e-1)} ${Y(0)} Z`;
+  const ideal=`M ${X(0)} ${Y(8)} L ${X(e-1)} ${Y(maxY)}`;
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">
+    <path d="${area}" fill="#B79A34" opacity="0.13"/>
+    <path d="${ideal}" fill="none" stroke="var(--dash)" stroke-width="1.4" stroke-dasharray="5 4" opacity="0.6"/>
+    <path d="${line}" fill="none" stroke="#B79A34" stroke-width="2.4"/>
+    <text x="${X(e-1)}" y="${Y(cum)-8}" text-anchor="end" class="c-val" fill="#E4C56A">${cum}</text>
+    <text x="${X(e-1)-2}" y="${Y(maxY)+13}" text-anchor="end" class="c-axis">${maxY}</text></svg>`;
+}
+function chartBodyUpsc(m){
+  const w=640,h=210,pL=30,pR=12,pT=12,pB=22; const e=Math.max(1,m.elapsed), n=m.dim;
+  const X=i=> pL+(w-pL-pR)*(n<=1?0:i/(n-1));
+  const Y=v=> pT+(h-pT-pB)*(1-v);
+  let gl=""; [0,.5,1].forEach(v=>{ const y=Y(v); gl+=`<line x1="${pL}" y1="${y}" x2="${w-pR}" y2="${y}" stroke="var(--line)"/><text x="${pL-6}" y="${y}" text-anchor="end" dominant-baseline="central" class="c-axis">${Math.round(v*100)}</text>`; });
+  const bIdx=CATS[0].idx, uIdx=CATS[1].idx; let bl="", ul="";
+  for(let d=1; d<=e; d++){ const row=grid[d]||[]; let b=0; bIdx.forEach(i=>{ if(row[i]) b++; }); let u=0; uIdx.forEach(i=>{ if(row[i]) u++; }); const x=X(d-1); const yb=Y(b/bIdx.length), yu=Y(u/uIdx.length); bl+=(d===1?`M ${x} ${yb}`:` L ${x} ${yb}`); ul+=(d===1?`M ${x} ${yu}`:` L ${x} ${yu}`); }
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">${gl}
+    <path d="${bl}" fill="none" stroke="#C2513E" stroke-width="2.2"/>
+    <path d="${ul}" fill="none" stroke="#3A7BA0" stroke-width="2.2"/></svg>`;
+}
+function chartMonths(list){
+  const w=640,h=200,pL=18,pR=10,pT=16,pB=26,gap=16,n=list.length;
+  const bw=(w-pL-pR-gap*(n-1))/n, maxH=h-pT-pB;
+  let s="";
+  list.forEach((o,i)=>{ const x=pL+i*(bw+gap); const bh=Math.max(2,maxH*o.pct); const y=pT+(maxH-bh); const isCur=(o.y===year&&o.m===month);
+    s+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="7" fill="#5F8A46" opacity="${isCur?1:0.5}"/>
+    <text x="${x+bw/2}" y="${h-11}" text-anchor="middle" class="c-axis">${MONTHS[o.m].slice(0,3)}</text>
+    <text x="${x+bw/2}" y="${h-1}" text-anchor="middle" class="c-axis" fill="#b3aca0">${String(o.y).slice(2)}</text>
+    <text x="${x+bw/2}" y="${y-5}" text-anchor="middle" class="c-val">${Math.round(o.pct*100)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">${s}</svg>`;
+}
+function chartYear(y){
+  const dates=allDates();
+  const cell=12, gap=3, pT=20, pL=26;
+  const start=new Date(y,0,1), end=new Date(y,11,31);
+  const startWd=(start.getDay()+6)%7;
+  const totalDays=Math.round((end-start)/86400000)+1;
+  const cols=Math.ceil((startWd+totalDays)/7);
+  const w=pL+cols*(cell+gap), h=pT+7*(cell+gap);
+  let cellsSvg="", months="";
+  [["M",0],["W",2],["F",4]].forEach(([t,r])=>{ cellsSvg+=`<text x="${pL-7}" y="${pT+r*(cell+gap)+cell-2}" text-anchor="end" class="c-axis">${t}</text>`; });
+  const d=new Date(start);
+  for(let i=0;i<totalDays;i++){
+    const wd=(d.getDay()+6)%7; const col=Math.floor((startWd+i)/7);
+    const row=dates[fmt(d)]; const c=row?row.filter(Boolean).length:0; const op=c/8;
+    const x=pL+col*(cell+gap), yy=pT+wd*(cell+gap);
+    const future=d>today;
+    if(future){ cellsSvg+=`<rect x="${x}" y="${yy}" width="${cell}" height="${cell}" rx="3" fill="none" stroke="var(--line)" stroke-dasharray="1 2"/>`; }
+    else { cellsSvg+=`<rect x="${x}" y="${yy}" width="${cell}" height="${cell}" rx="3" fill="${c>0?'#2F8A72':'var(--emptycell)'}" fill-opacity="${c>0?(0.16+op*0.84).toFixed(3):1}" stroke="var(--line)" stroke-width="0.5"/>`; }
+    if(d.getDate()===1){ months+=`<text x="${x}" y="${pT-6}" class="c-axis">${MONTHS[d.getMonth()].slice(0,3)}</text>`; }
+    d.setDate(d.getDate()+1);
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">${months}${cellsSvg}</svg>`;
+}
+
+/* ================= insights ================= */
+function buildInsights(m, dates){
+  const out=[];
+  const rates=m.perHabit.map(c=> c/Math.max(1,m.elapsed));
+  let bi=0,wi=0; rates.forEach((r,i)=>{ if(r>rates[bi]) bi=i; if(r<rates[wi]) wi=i; });
+  out.push({c:HUES[bi], t:`Strongest: <b>${esc(habits[bi])}</b> at ${Math.round(rates[bi]*100)}% this month.`});
+  out.push({c:HUES[wi], t:`Weakest link: <b>${esc(habits[wi])}</b> at ${Math.round(rates[wi]*100)}% - one habit to defend tomorrow.`});
+  const dow=dowMetrics(m);
+  let dwLow=0,dwHigh=0; dow.forEach((v,i)=>{ if(v<dow[dwLow]) dwLow=i; if(v>dow[dwHigh]) dwHigh=i; });
+  if(m.elapsed>=4) out.push({c:"#3A7BA0", t:`You hold the line best on <b>${DOW[dwHigh]}</b> and slip most on <b>${DOW[dwLow]}</b>.`});
+  const half=Math.floor(m.elapsed/2);
+  if(m.elapsed>=6){ let a=0,b=0; for(let i=0;i<half;i++) a+=m.daily[i]; for(let i=half;i<m.elapsed;i++) b+=m.daily[i]; a/=Math.max(1,half); b/=Math.max(1,m.elapsed-half); const dir=b>a+0.3?"climbing":b<a-0.3?"sliding":"steady"; out.push({c:"#5F8A46", t:`Momentum is <b>${dir}</b> - back half averaging ${b.toFixed(1)}/8 vs ${a.toFixed(1)}/8 in the front half.`}); }
+  const ps=currentStreak(dates,isPerfect);
+  if(ps>0) out.push({c:"#8A5296", t:`<b>${ps}-day</b> perfect streak running (all 8). Don't break the chain.`});
+  else out.push({c:"#8A5296", t:`${m.perfectDays} perfect days so far - a clean all-8 day starts a new perfect streak.`});
+  return out;
+}
+
+/* ================= views ================= */
+function topBar(){
+  return `<div class="topbar">
+    <div class="brand"><div class="eyebrow">Monthly Discipline</div><div class="title">Habit Wheel</div></div>
+    <div class="monthnav">
+      <button class="navbtn" id="prev" aria-label="Previous month">&#8249;</button>
+      <div class="monthlabel"><div class="m">${MONTHS[month]}</div><div class="y">${year}</div></div>
+      <button class="navbtn" id="next" aria-label="Next month">&#8250;</button>
+    </div>
+  </div>
+  <div class="tabrow">
+    <div class="seg">
+      <button data-view="track" class="${view==='track'?'on':''}">Track</button>
+      <button data-view="stats" class="${view==='stats'?'on':''}">Insights</button>
+      <button data-view="analysis" class="${view==='analysis'?'on':''}">Analysis</button>
+    </div>
+  </div>`;
+}
+
+function wheelView(){
+  const m=monthMetrics();
+  const rows=habits.map((h,i)=>`<div class="habitrow"><span class="hidx">${i+1}</span><span class="swatch" style="background:${HUES[i]}"></span><input data-habit="${i}" value="${esc(h)}" /><span class="hpct">${Math.round((m.perHabit[i]/Math.max(1,m.elapsed))*100)}%</span></div>`).join("");
+  const todayDone = m.isCurrent && grid[today.getDate()] ? grid[today.getDate()].filter(Boolean).length : 0;
+  return `<div class="layout">
+    <div class="wheelcard" id="wheel">${buildWheel()}</div>
+    <div>
+      <div class="panel"><h3>Habits</h3>${rows}</div>
+      <div class="panel"><h3>This Month</h3><div class="stats">
+        <div class="stat"><div class="n">${Math.round(m.overall*100)}%</div><div class="l">Complete</div></div>
+        <div class="stat"><div class="n">${m.doneTotal}</div><div class="l">Ticks</div></div>
+        <div class="stat"><div class="n">${todayDone}/8</div><div class="l">Today</div></div>
+      </div></div>
+      <div class="panel"><h3>Key Goal</h3><input class="field" id="goals" value="${esc(goals)}" /></div>
+      <div class="panel"><h3>Observations</h3><textarea class="field" id="notes" rows="4" placeholder="What worked, what slipped...">${esc(notes)}</textarea></div>
+    </div>
+  </div>
+  <div class="footer"><div class="quotewrap"><textarea class="quote" id="quote" rows="2">${esc(quote)}</textarea></div><button class="reset" id="reset">Clear month</button></div>`;
+}
+
+function gridView(){
+  const dim=daysInMonth(year,month), m=monthMetrics();
+  const isCur=m.isCurrent, todayN=today.getDate();
+  let head=`<th class="gcorner"></th>`;
+  for(let d=1; d<=dim; d++){ const wd=(new Date(year,month,d).getDay()+6)%7; const we=wd>=5; head+=`<th class="gday${isCur&&d===todayN?' gtoday':''}${we?' gwend':''}">${d}</th>`; }
+  head+=`<th class="gpct">%</th>`;
+  let rows="";
+  habits.forEach((h,i)=>{
+    let cells="", cnt=0;
+    for(let d=1; d<=dim; d++){ const on=grid[d]&&grid[d][i]; if(on)cnt++; const fut=isCur&&d>todayN; cells+=`<td class="gcell${fut?' gfut':''}" data-d="${d}" data-h="${i}" style="${on?`background:${HUES[i]};border-color:${HUES[i]}`:''}"></td>`; }
+    const pct=Math.round(cnt/Math.max(1,m.elapsed)*100);
+    rows+=`<tr><th class="gname"><span class="swatch" style="background:${HUES[i]}"></span>${esc(h)}</th>${cells}<td class="gpct">${pct}</td></tr>`;
+  });
+  let tot=`<th class="gname gtotname">Day total</th>`;
+  for(let d=1; d<=dim; d++){ const c=m.daily[d-1]||0; const fut=isCur&&d>todayN; tot+=`<td class="gsum">${fut?'':(c||'')}</td>`; }
+  tot+=`<td class="gpct">${Math.round(m.overall*100)}</td>`;
+  return `<div class="panel">
+    <h3>Grid <span class="sub">tap any square to tick - ${MONTHS[month]} ${year}</span></h3>
+    <div class="gscroll"><table class="gtable" id="gtable">
+      <thead><tr>${head}</tr></thead>
+      <tbody>${rows}<tr class="gtotrow">${tot}</tr></tbody>
+    </table></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="n">${Math.round(m.overall*100)}%</div><div class="l">Complete</div></div>
+    <div class="stat"><div class="n">${m.doneTotal}</div><div class="l">Ticks</div></div>
+    <div class="stat"><div class="n">${m.perfectDays}</div><div class="l">Perfect days</div></div>
+  </div>`;
+}
+
+function statsView(){
+  const m=monthMetrics(); const dates=allDates();
+  const habitItems=habits.map((h,i)=>({ name:h, color:HUES[i], rate:m.perHabit[i]/Math.max(1,m.elapsed) }));
+  const streaks=habits.map((h,i)=>({ name:h, color:HUES[i], cur:currentStreak(dates,r=>isDone(r,i)), best:longestStreak(dates,r=>isDone(r,i)) }))
+                      .sort((a,b)=> b.cur-a.cur || b.best-a.best);
+  const perfCur=currentStreak(dates,isPerfect), perfBest=longestStreak(dates,isPerfect);
+  const bodyRate=catRate(m,CATS[0].idx), upscRate=catRate(m,CATS[1].idx);
+  const dow=dowMetrics(m);
+  const insights=buildInsights(m,dates);
+  const avgDay=(m.daily.slice(0,m.elapsed).reduce((a,b)=>a+b,0)/Math.max(1,m.elapsed)).toFixed(1);
+  const cards=`<div class="cards">
+    <div class="card"><div class="k">${Math.round(m.overall*100)}%</div><div class="t">Complete</div><div class="s">${m.doneTotal} of ${m.elapsed*8} ticks</div></div>
+    <div class="card"><div class="k">${perfCur}<span style="font-size:15px;color:var(--soft)"> / ${perfBest}</span></div><div class="t">Perfect streak</div><div class="s">now / best (all 8)</div></div>
+    <div class="card"><div class="k">${m.perfectDays}</div><div class="t">Perfect days</div><div class="s">${m.activeDays} active days</div></div>
+    <div class="card"><div class="k">${avgDay}</div><div class="t">Avg / day</div><div class="s">out of 8 habits</div></div>
+  </div>`;
+  const insightHTML=insights.map(x=>`<div class="insight"><span class="dot" style="background:${x.c}"></span><span>${x.t}</span></div>`).join("");
+  const streakHTML=streaks.map(s=>`<div class="streakrow"><span class="swatch" style="background:${s.color}"></span><span class="nm">${esc(s.name)}</span><span class="cur">${s.cur>0?'&#128293; ':''}${s.cur}</span><span class="best">best ${s.best}</span></div>`).join("");
+  return `${cards}
+  <div class="panel"><h3>Read-out <span class="sub">${MONTHS[month]} ${year}</span></h3>${insightHTML}</div>
+  <div class="grid2">
+    <div class="panel"><h3>Habit completion <span class="sub">% of days</span></h3>${chartHBars(habitItems)}</div>
+    <div class="panel"><h3>Streaks <span class="sub">current / best</span></h3>${streakHTML}</div>
+  </div>
+  <div class="panel"><h3>Daily momentum <span class="sub">habits done - 7-day avg dashed</span></h3>${chartDaily(m)}</div>
+  <div class="grid2">
+    <div class="panel"><h3>By weekday <span class="sub">avg %</span></h3>${chartDOW(dow)}</div>
+    <div class="panel"><h3>Two pillars <span class="sub">this month</span></h3>${chartHBars([{name:"Body",color:"#C2513E",rate:bodyRate},{name:"UPSC",color:"#3A7BA0",rate:upscRate}])}
+      <div style="font-size:12.5px;color:var(--soft);margin-top:8px;line-height:1.5">Body = water, walk, diet, supplements, skincare. UPSC = class, revision, answer writing.</div>
+    </div>
+  </div>
+  <div class="panel"><h3>Month heatmap <span class="sub">darker = more done</span></h3>${chartCalendar(m)}</div>
+  <div class="panel"><h3>Data <span class="sub">device-local backup</span></h3>
+    <div class="databtns"><button class="dbtn" id="csvmonth">CSV: this month</button><button class="dbtn" id="csvall">CSV: all history</button><button class="dbtn" id="export">Backup (JSON)</button><button class="dbtn" id="import">Restore</button></div>
+    <div style="font-size:12.5px;color:var(--soft);margin-top:10px;line-height:1.5">Your history lives in this browser (and in the cloud when you're signed in). CSV opens in Excel/Sheets (one row per day). JSON backup restores everything, including on a new device.</div>
+  </div>`;
+}
+
+function analysisView(){
+  const m=monthMetrics();
+  const rates=m.perHabit.map(c=> c/Math.max(1,m.elapsed));
+  const series=lastMonths(6).map(o=>{ const r=overallFor(o.y,o.m); return {y:o.y,m:o.m,pct:r.pct,done:r.done,hasData:r.hasData}; });
+  const cur=series[series.length-1];
+  let prev=null; for(let i=series.length-2;i>=0;i--){ if(series[i].hasData){ prev=series[i]; break; } }
+  const delta = prev ? Math.round((cur.pct-prev.pct)*100) : null;
+  let ytdDone=0, activeMonths=0, bestPct=0, bestM=-1;
+  for(let mm=0; mm<12; mm++){ const r=overallFor(year,mm); if(r.hasData){ ytdDone+=r.done; activeMonths++; if(r.pct>bestPct){ bestPct=r.pct; bestM=mm; } } }
+  const avgDay=(m.daily.slice(0,m.elapsed).reduce((a,b)=>a+b,0)/Math.max(1,m.elapsed)).toFixed(1);
+
+  const cards=`<div class="cards">
+    <div class="card"><div class="k">${Math.round(cur.pct*100)}%</div><div class="t">This month</div><div class="s">${delta===null?`${MONTHS[month]} so far`:`${delta>0?'&#9650;':delta<0?'&#9660;':'&ndash;'} ${Math.abs(delta)} pts vs ${MONTHS[prev.m].slice(0,3)}`}</div></div>
+    <div class="card"><div class="k">${ytdDone}</div><div class="t">Ticks in ${year}</div><div class="s">${activeMonths} active month${activeMonths===1?'':'s'}</div></div>
+    <div class="card"><div class="k">${Math.round(bestPct*100)}%</div><div class="t">Best month</div><div class="s">${bestM>=0?MONTHS[bestM]+' '+year:'-'}</div></div>
+    <div class="card"><div class="k">${avgDay}</div><div class="t">Avg / day</div><div class="s">out of 8, this month</div></div>
+  </div>`;
+
+  const legend=habits.map((h,i)=>`<div class="li"><span class="n2">${i+1}</span><span class="swatch" style="background:${HUES[i]}"></span><span>${esc(h)}</span><span class="r2">${Math.round(rates[i]*100)}%</span></div>`).join("");
+
+  return `${cards}${weeklyReview()}
+  <div class="grid2">
+    <div class="panel"><h3>Habit shape <span class="sub">${MONTHS[month]} - % of days</span></h3>${chartRadar(rates)}<div class="legend">${legend}</div></div>
+    <div class="panel"><h3>Pace vs perfect <span class="sub">cumulative ticks</span></h3>${chartCumulative(m)}
+      <div style="font-size:12.5px;color:var(--soft);margin-top:8px;line-height:1.5">Gold line = ticks banked so far. Dashed = an all-8 day, every day. The gap between them is what a perfect month would have added.</div>
+    </div>
+  </div>
+  <div class="panel"><h3>Body vs UPSC <span class="sub">daily % - ${MONTHS[month]}</span></h3>${chartBodyUpsc(m)}
+    <div style="font-size:12.5px;color:var(--soft);margin-top:8px;line-height:1.5"><b style="color:#C2513E">Body</b> = water, walk, diet, supplements, skincare. <b style="color:#3A7BA0">UPSC</b> = class, revision, answer writing.</div>
+  </div>
+  <div class="panel"><h3>Month over month <span class="sub">last 6 - overall %</span></h3>${chartMonths(series)}</div>
+  <div class="panel"><h3>${year} at a glance <span class="sub">every day - darker = more done</span></h3><div class="gscroll">${chartYear(year)}</div></div>`;
+}
+
+/* ================= sync modal ================= */
+function syncModalHTML(){
+  if(!sync.configured){
+    return `<div class="mtitle">Sync isn't set up</div>
+      <p class="mp">Your wheel saves on this device and keeps working offline. To sync across devices, connect a free Firebase project once.</p>
+      <p class="mp">Open <b>FIREBASE-SETUP.txt</b> (included with the app): create a project, turn on Email sign-in, and paste 6 config lines into <b>index.html</b>. About five minutes.</p>
+      <div class="mbtns"><button class="dbtn prim" data-close="1">Got it</button></div>`;
+  }
+  if(sync.user){
+    return `<div class="mtitle">Sync is on</div>
+      <p class="mp">Signed in as <b>${esc(sync.email||"")}</b>. Every tick on this device saves to the cloud and shows up on your other devices.</p>
+      <div class="syncstat"><span class="sdot on"></span>${esc(sync.status||"Synced")}</div>
+      <div class="synced-ago">${sync.lastSync?("Last synced "+agoText(sync.lastSync)):"Waiting for first sync..."}</div>
+      <div class="mbtns"><button class="dbtn" id="s_out">Sign out</button></div>`;
+  }
+  return `<div class="mtitle">Sign in to sync</div>
+    <p class="mp">Use the same account on every device to keep your wheel in sync.</p>
+    <button class="dbtn gbtn" id="s_google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.6 5.1 29.6 3 24 3 16 3 9.1 7.6 6.3 14.7z"/><path fill="#4CAF50" d="M24 45c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.9 26.7 37 24 37c-5.3 0-9.7-2.6-11.3-7l-6.5 5C9.1 42.3 16 45 24 45z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.3 5.3C41.9 36 45 30.6 45 24c0-1.2-.1-2.3-.4-3.5z"/></svg>Continue with Google</button>
+    <div class="ordiv"><span>or use email</span></div>
+    <input id="s_email" class="minput" type="email" inputmode="email" autocomplete="username" placeholder="you@email.com" value="${esc(sync.formEmail||"")}"/>
+    <input id="s_pw" class="minput" type="password" autocomplete="current-password" placeholder="Password (6+ characters)"/>
+    <div class="merr" id="s_err">${esc(sync.err||"")}</div>
+    <div class="mbtns"><button class="dbtn prim" id="s_in">${sync.busy?"Working...":"Sign in"}</button><button class="dbtn" id="s_up">Create account</button></div>
+    <button class="mlink" id="s_reset">Forgot password?</button>`;
+}
+function wireSyncModal(){
+  const c=document.getElementById("synccontent"); if(!c) return;
+  c.querySelectorAll("[data-close]").forEach(b=> b.onclick=closeSync);
+  const gEl=c.querySelector("#s_google"); if(gEl) gEl.onclick=()=>{ if(window.Cloud&&window.Cloud.signInGoogle) window.Cloud.signInGoogle(); else noCloud(); };
+  const getE=()=>{ const el=c.querySelector("#s_email"); return el?el.value.trim():""; };
+  const getP=()=>{ const el=c.querySelector("#s_pw"); return el?el.value:""; };
+  const inEl=c.querySelector("#s_in"), upEl=c.querySelector("#s_up"), outEl=c.querySelector("#s_out"), rsEl=c.querySelector("#s_reset");
+  if(inEl) inEl.onclick=()=>{ sync.formEmail=getE(); if(window.Cloud) window.Cloud.signIn(getE(),getP()); else noCloud(); };
+  if(upEl) upEl.onclick=()=>{ sync.formEmail=getE(); if(window.Cloud) window.Cloud.signUp(getE(),getP()); else noCloud(); };
+  if(outEl) outEl.onclick=()=>{ if(window.Cloud) window.Cloud.signOut(); };
+  if(rsEl) rsEl.onclick=()=>{ const e=getE(); if(!e){ sync.err="Enter your email first, then tap reset."; sync.formEmail=e; paintSync(); return; } sync.formEmail=e; if(window.Cloud) window.Cloud.reset(e); };
+}
+function noCloud(){ sync.err="Sync isn't set up yet - see FIREBASE-SETUP.txt."; paintSync(); }
+function updateSyncButton(){
+  const b=document.getElementById("syncbtn"); if(!b) return;
+  if(sync.user){ b.innerHTML=`<span class="sdot on"></span>${esc((sync.email||"").split("@")[0]).slice(0,12)}`; }
+  else if(sync.configured){ b.innerHTML=`<span class="sdot"></span>Sign in`; }
+  else { b.innerHTML=`<span class="sdot"></span>Sync`; }
+}
+function updateSoundButton(){ const b=document.getElementById("soundbtn"); if(!b) return; b.innerHTML=`<span class="sdot${soundOn?' on':''}"></span>Sound ${soundOn?'on':'off'}`; }
+function paintSync(){ updateSyncButton(); paintSet(); if(syncModalOpen){ const c=document.getElementById("synccontent"); if(c){ c.innerHTML=syncModalHTML(); wireSyncModal(); } } }
+function openSync(){ syncModalOpen=true; sync.err=""; const md=document.getElementById("syncmodal"); md.classList.add("open"); md.setAttribute("aria-hidden","false"); paintSync(); }
+function closeSync(){ syncModalOpen=false; const md=document.getElementById("syncmodal"); md.classList.remove("open"); md.setAttribute("aria-hidden","true"); }
+
+/* ================= render ================= */
+function render(){
+  const wasEnter=entrance;
+  const content = view==='track'?trackView() : view==='analysis'?analysisView() : statsView();
+  document.getElementById("root").innerHTML = `<div class="board${entrance?' enter':''}">${topBar()}${content}</div>`;
+  document.getElementById("prev").onclick=()=>shiftMonth(-1);
+  document.getElementById("next").onclick=()=>shiftMonth(1);
+  document.querySelectorAll(".seg button").forEach(b=> b.onclick=()=>{ view=b.dataset.view; entrance=true; render(); });
+
+  if(view==="track"){
+    document.querySelectorAll(".trackswitch button").forEach(b=> b.onclick=()=>setTrack(b.dataset.track));
+    if(trackMode==="wheel"){
+    document.getElementById("reset").onclick=resetMonth;
+    document.querySelectorAll("#wheel path.cell").forEach(p=> p.addEventListener("click",()=>toggle(Number(p.dataset.d),Number(p.dataset.h))));
+    document.querySelectorAll("input[data-habit]").forEach(inp=>{ inp.addEventListener("input",e=>{ habits[Number(inp.dataset.habit)]=e.target.value; }); inp.addEventListener("blur",saveConfig); });
+    const g=document.getElementById("goals"); g.addEventListener("input",e=>{ goals=e.target.value; }); g.addEventListener("blur",saveConfig);
+    const n=document.getElementById("notes"); n.addEventListener("input",e=>{ notes=e.target.value; }); n.addEventListener("blur",saveMonth);
+    const q=document.getElementById("quote"); q.addEventListener("input",e=>{ quote=e.target.value; }); q.addEventListener("blur",saveConfig);
+    } else {
+    document.querySelectorAll("#gtable td.gcell").forEach(td=> td.addEventListener("click",()=>toggle(Number(td.dataset.d),Number(td.dataset.h))));
+    }
+  } else if(view==="stats"){
+    document.getElementById("csvmonth").onclick=()=>exportCSV(false);
+    document.getElementById("csvall").onclick=()=>exportCSV(true);
+    document.getElementById("export").onclick=exportData;
+    document.getElementById("import").onclick=()=>document.getElementById("importer").click();
+  }
+  updateSyncButton();
+  if(wasEnter) animateCounts();
+  entrance=false;
+}
+document.getElementById("importer").addEventListener("change",e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=""; });
+
+/* ================= boot ================= */
+applyTheme(loadKey("disc:theme","auto"));
+loadConfig(); loadMonth(); render();
+try{ window.matchMedia("(prefers-color-scheme: light)").addEventListener("change",()=>{ if(loadKey("disc:theme","auto")==="auto"){ applyTheme("auto"); updateThemeButton(); } }); }catch(e){}
+document.getElementById("syncclose").onclick=closeSync;
+document.querySelector("#syncmodal .modalback").onclick=closeSync;
+applyCalm();
+document.getElementById("gearbtn").onclick=openSet;
+document.getElementById("setclose").onclick=closeSet;
+document.querySelector("#setmodal .modalback").onclick=closeSet;
+
+/* bridge the sync layer talks to */
+window.App = {
+  setAuthState(s){ Object.assign(sync, s); if(s && s.lastSync) saveKey("disc:lastsync", s.lastSync); paintSync(); },
+  currentDump(){ return localDump(); },
+  currentMeta(){ return loadMeta(); },
+  applyRemote(store, meta){ applyRemote(store, meta); }
+};
+
+if("serviceWorker" in navigator){
+  let _refreshing=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(_refreshing) return; _refreshing=true; location.reload(); });
+  window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(reg=>{ reg.update(); setInterval(()=>{ try{reg.update();}catch(e){} }, 3600000); }).catch(()=>{}); });
+}
+</script>
+
+<!-- ============================================================= -->
+<!--  CLOUD SYNC (optional). Fill in the config below to turn on   -->
+<!--  email login + cross-device sync. See FIREBASE-SETUP.txt.     -->
+<!--  Left as-is, the app runs perfectly in local-only mode.       -->
+<!-- ============================================================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup }
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/* ======= PASTE YOUR FIREBASE CONFIG BETWEEN THE LINES ======= */
+const firebaseConfig = {
+  apiKey: "AIzaSyC8QeobLzF28etRiPZTpD6moCC6k1ITbXQ",
+  authDomain: "project-limitless-cc89c.firebaseapp.com",
+  projectId: "project-limitless-cc89c",
+  appId: "1:579632921168:web:df44e846c7b6f393aa6f55"
+};
+/* ============================================================ */
+
+const set = s => window.App && window.App.setAuthState && window.App.setAuthState(s);
+const configured = !/PASTE_/.test(JSON.stringify(firebaseConfig));
+
+if(!configured){
+  set({ configured:false, user:false, status:"Local only - sync not set up" });
+} else {
+  try {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let ref=null, unsub=null, pushTimer=null;
+
+    async function pushNow(){
+      if(!ref) return;
+      try { set({ status:"Saving..." });
+        await setDoc(ref, { store: window.App.currentDump(), meta: window.App.currentMeta(), updatedAt: Date.now() });
+        set({ status:"Synced", lastSync: Date.now() });
+      } catch(e){ set({ status:"Save failed - will retry" }); }
+    }
+    function friendly(e){
+      const c=(e&&e.code)||"";
+      if(c.includes("invalid-cred")||c.includes("wrong-password")||c.includes("user-not-found")) return "Email or password is incorrect.";
+      if(c.includes("email-already")) return "That email already has an account - sign in instead.";
+      if(c.includes("weak-password")) return "Password needs at least 6 characters.";
+      if(c.includes("invalid-email")) return "That doesn't look like a valid email.";
+      if(c.includes("too-many-requests")) return "Too many tries - wait a moment and retry.";
+      if(c.includes("network")) return "Network error - check your connection.";
+      if(c.includes("operation-not-allowed")) return "Turn on that sign-in method in Firebase first.";
+      if(c.includes("popup-closed")||c.includes("cancelled-popup")||c.includes("user-cancelled")) return "Sign-in was cancelled.";
+      if(c.includes("popup-blocked")) return "Allow pop-ups for this site, then try Google again.";
+      if(c.includes("account-exists")) return "That email is already registered with a different sign-in method.";
+      if(c.includes("unauthorized-domain")) return "This site is not authorized in Firebase yet.";
+      return "Something went wrong. Please try again.";
+    }
+
+    window.Cloud = {
+      configured:true, user:null,
+      schedulePush(){ if(!ref) return; clearTimeout(pushTimer); pushTimer=setTimeout(pushNow, 1200); },
+      async signIn(email,pw){ set({busy:true,err:""}); try{ await signInWithEmailAndPassword(auth,email,pw); }catch(e){ set({busy:false,err:friendly(e)}); } },
+      async signUp(email,pw){ set({busy:true,err:""}); try{ await createUserWithEmailAndPassword(auth,email,pw); }catch(e){ set({busy:false,err:friendly(e)}); } },
+      async signOut(){ try{ await signOut(auth); }catch(e){} },
+      async reset(email){ set({busy:true,err:""}); try{ await sendPasswordResetEmail(auth,email); set({busy:false,err:"Reset email sent - check your inbox."}); }catch(e){ set({busy:false,err:friendly(e)}); } },
+      async signInGoogle(){ set({busy:true,err:""}); try{ const p=new GoogleAuthProvider(); await signInWithPopup(auth,p); }catch(e){ set({busy:false,err:friendly(e)}); } }
+    };
+
+    setPersistence(auth, browserLocalPersistence).catch(()=>{});
+    onAuthStateChanged(auth, user=>{
+      window.Cloud.user = user;
+      if(unsub){ unsub(); unsub=null; }
+      if(user){
+        ref = doc(db, "users", user.uid);
+        set({ configured:true, user:true, email:user.email, busy:false, err:"", status:"Connecting..." });
+        unsub = onSnapshot(ref, snap=>{
+          if(snap.exists()){ const d=snap.data()||{}; window.App.applyRemote(d.store||{}, d.meta||{}); set({ status:"Synced", lastSync: Date.now() }); }
+          else { pushNow(); }
+        }, ()=> set({ status:"Offline - saved locally" }));
+      } else {
+        ref=null;
+        set({ configured:true, user:false, email:"", busy:false, status:"Signed out - saving locally" });
+      }
+    });
+  } catch(e){
+    set({ configured:false, user:false, status:"Sync unavailable" });
+  }
+}
+</script>
+</body>
+</html>
